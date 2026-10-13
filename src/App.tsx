@@ -395,34 +395,9 @@ function AppContent() {
                 >
                   <AscendantLogo size="sm" tagline="ACADEMIC COMPANION" light={true} />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsSemesterModalOpen(true)}
-                  className="hidden sm:flex items-center gap-2 pl-3 border-l border-[#722f37]/50 cursor-pointer hover:opacity-80 transition-opacity text-left group"
-                  title="Click to switch your current active semester"
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm" />
-                  <span className="text-[10px] font-mono text-[#E8DCC6] uppercase tracking-widest font-bold flex items-center gap-1 group-hover:text-white transition-colors">
-                    SEM {profile.currentSemester} ACTIVE
-                    <ChevronDown className="w-3 h-3 text-[#E8DCC6]/60 group-hover:text-white" />
-                  </span>
-                </button>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
-                {/* Semester Badge Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsSemesterModalOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#240A0D]/80 border border-[#722f37]/60 text-[10px] font-mono text-[#FAF6EE] font-bold shadow-inner hover:border-[#E8DCC6]/60 hover:bg-[#381116] transition-all cursor-pointer active:scale-95 group"
-                  title="Click to switch active semester (e.g. Sem 5)"
-                  aria-label="Change current semester"
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm" />
-                  <span>SEM {profile.currentSemester}</span>
-                  <ChevronDown className="w-3 h-3 text-[#E8DCC6]/70 group-hover:text-white transition-colors" />
-                </button>
-
                 {/* Sync Icon Button */}
                 <button
                   type="button"
