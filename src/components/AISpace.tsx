@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Semester, AttendanceSubject, RoadmapStage } from '../types';
 import { askGroq, ChatMessage, calculateHeuristicScore, extractScore } from '../services/ai';
@@ -31,7 +31,7 @@ function parseInline(text: string, isUser = false) {
   // Handle <br> tags cleanly
   const brParts = text.split(/<br\s*\/?>/gi);
   return brParts.map((brPart, bIdx) => (
-    <React.Fragment key={bIdx}>
+    <Fragment key={bIdx}>
       {bIdx > 0 && <br />}
       {brPart.split(/\*\*([^*]+)\*\*/g).map((part, idx) => {
         if (idx % 2 === 1) {
@@ -46,7 +46,7 @@ function parseInline(text: string, isUser = false) {
         }
         return part;
       })}
-    </React.Fragment>
+    </Fragment>
   ));
 }
 
@@ -54,28 +54,41 @@ function parseMarkdown(text: string, isUser = false) {
   if (!text) return null;
 
   const lines = text.split('\n');
-  const elements: React.ReactNode[] = [];
+  const elements: ReactNode[] = [];
   let i = 0;
+
+  const isTableRow = (l: string) => {
+    const t = l.trim();
+    return t.startsWith('|') && t.includes('|');
+  };
+  const isTableSeparator = (l: string) => {
+    const t = l.trim();
+    return /^\|?(\s*[-:]+\s*\|?)+$/.test(t) && t.includes('-');
+  };
+  const parseCells = (rowStr: string) => {
+    let clean = rowStr.trim();
+    if (clean.startsWith('|')) clean = clean.substring(1);
+    if (clean.endsWith('|')) clean = clean.substring(0, clean.length - 1);
+    return clean.split('|').map(c => c.trim());
+  };
 
   while (i < lines.length) {
     const rawLine = lines[i];
     const trimmed = rawLine.trim();
 
-    // 1. Table Detection (Line starts and ends with '|')
-    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+    // 1. Table Detection
+    if (isTableRow(trimmed)) {
       const tableLines: string[] = [];
-      while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+      while (i < lines.length && isTableRow(lines[i])) {
         tableLines.push(lines[i].trim());
         i++;
       }
 
-      // Filter out markdown separator lines like |---|---|
-      const isSeparator = (line: string) => /^\|(\s*[-:]+\s*\|)+$/.test(line);
-      const rows = tableLines.filter(line => !isSeparator(line));
+      const rows = tableLines.filter(line => !isTableSeparator(line));
 
       if (rows.length > 0) {
-        const headerCells = rows[0].slice(1, -1).split('|').map(c => c.trim());
-        const bodyRows = rows.slice(1).map(r => r.slice(1, -1).split('|').map(c => c.trim()));
+        const headerCells = parseCells(rows[0]);
+        const bodyRows = rows.slice(1).map(r => parseCells(r));
 
         elements.push(
           <div key={`table-${i}`} className="my-3.5 overflow-x-auto rounded-2xl border border-[#B7A89A]/40 shadow-sm bg-white">
@@ -622,7 +635,7 @@ End with a score in format: "SCORE: X" (e.g. SCORE: 75).`;
                       ? 'bg-[#722f37] text-[#FAF6EE]'
                       : 'bg-[#FAF6EE] border border-[#B7A89A]/40 text-[#722f37]'
                   }`}>
-                    <div className="whitespace-pre-line pr-6">
+                    <div className="pr-6">
                       {parseMarkdown(msg.content, msg.role === 'user')}
                     </div>
                     <button
