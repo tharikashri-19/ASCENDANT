@@ -1,0 +1,19 @@
+{
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/leetcode-graphql",
+      "destination": "https://leetcode.com/graphql"
+    },
+    {
+      "source": "/codechef-api/:path*",
+      "destination": "https://codechef-rating-i7yd.onrender.com/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

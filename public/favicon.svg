@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="neonGlow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Background Badge -->
+  <rect width="64" height="64" rx="18" fill="#090e1a" stroke="#00f0ff" stroke-width="2" stroke-opacity="0.6"/>
+  <!-- Glowing Upward Chevron Arrows Motif -->
+  <g filter="url(#glow)">
+    <path d="M18 42L32 28L46 42" stroke="url(#neonGlow)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 28L32 18L42 28" stroke="#00f0ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="32" cy="18" r="2.5" fill="#ffffff"/>
+  </g>
+</svg>
