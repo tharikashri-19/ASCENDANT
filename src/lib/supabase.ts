@@ -1,7 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const defaultUrl = 'https://rfhkdvjmunjqxcawakqz.supabase.co';
+const defaultAnonKey = 'sb_publishable_dAwAMn3q_bUUaCrZGtCSyA_UZ13zWyR';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || defaultUrl;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || defaultAnonKey;
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
@@ -10,13 +13,9 @@ export const isSupabaseConfigured = Boolean(
   !supabaseUrl.includes('placeholder')
 );
 
-// Fallback URL & Key to prevent createClient from crashing if env is not configured yet
-const fallbackUrl = 'https://placeholder.supabase.co';
-const fallbackKey = 'placeholder-anon-key';
-
 export const supabase = createClient(
-  isSupabaseConfigured ? supabaseUrl : fallbackUrl,
-  isSupabaseConfigured ? supabaseAnonKey : fallbackKey,
+  supabaseUrl,
+  supabaseAnonKey,
   {
     auth: {
       persistSession: true,
