@@ -290,7 +290,7 @@ export async function askGroq(
           model,
           messages: sanitizedMessages,
           temperature: 0.7,
-          max_tokens: 1500,
+          max_tokens: 4096,
         }),
       });
 

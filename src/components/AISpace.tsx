@@ -28,76 +28,170 @@ interface AISpaceProps {
 }
 
 function parseInline(text: string, isUser = false) {
-  const parts = text.split(/\*\*([^*]+)\*\*/g);
-  return parts.map((part, idx) => {
-    if (idx % 2 === 1) {
-      return (
-        <strong
-          key={idx}
-          className={`font-extrabold ${isUser ? 'text-white' : 'text-[#722f37]'}`}
-        >
-          {part}
-        </strong>
-      );
-    }
-    return part;
-  });
+  // Handle <br> tags cleanly
+  const brParts = text.split(/<br\s*\/?>/gi);
+  return brParts.map((brPart, bIdx) => (
+    <React.Fragment key={bIdx}>
+      {bIdx > 0 && <br />}
+      {brPart.split(/\*\*([^*]+)\*\*/g).map((part, idx) => {
+        if (idx % 2 === 1) {
+          return (
+            <strong
+              key={idx}
+              className={`font-extrabold ${isUser ? 'text-white' : 'text-[#722f37]'}`}
+            >
+              {part}
+            </strong>
+          );
+        }
+        return part;
+      })}
+    </React.Fragment>
+  ));
 }
 
 function parseMarkdown(text: string, isUser = false) {
   if (!text) return null;
-  return (
-    <div
-      className={`space-y-2 text-sm sm:text-[14.5px] leading-relaxed ${
-        isUser ? 'text-[#FAF6EE]' : 'text-[#722f37]'
-      }`}
-    >
-      {text.split('\n').map((line, idx) => {
-        if (line.trim().startsWith('### ')) {
-          return (
-            <h3
-              key={idx}
-              className={`text-base font-extrabold mt-3.5 mb-1.5 ${
-                isUser ? 'text-white' : 'text-[#722f37]'
-              }`}
-            >
-              {parseInline(line.replace('### ', ''), isUser)}
-            </h3>
-          );
-        }
-        if (line.trim().startsWith('#### ')) {
-          return (
-            <h4
-              key={idx}
-              className={`text-sm font-bold mt-2.5 mb-1 ${
-                isUser ? 'text-[#FAF6EE]' : 'text-[#722f37]'
-              }`}
-            >
-              {parseInline(line.replace('#### ', ''), isUser)}
-            </h4>
-          );
-        }
-        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
-          return (
-            <li
-              key={idx}
-              className={`ml-5 list-disc my-1 ${
-                isUser ? 'text-[#FAF6EE]/95' : 'text-[#722f37]/90'
-              }`}
-            >
-              {parseInline(line.substring(2), isUser)}
-            </li>
-          );
-        }
-        return (
-          <p
-            key={idx}
-            className={`min-h-[1em] ${isUser ? 'text-[#FAF6EE]' : 'text-[#722f37]'}`}
-          >
-            {parseInline(line, isUser)}
-          </p>
+
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+
+    // 1. Table Detection (Line starts and ends with '|')
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+
+      // Filter out markdown separator lines like |---|---|
+      const isSeparator = (line: string) => /^\|(\s*[-:]+\s*\|)+$/.test(line);
+      const rows = tableLines.filter(line => !isSeparator(line));
+
+      if (rows.length > 0) {
+        const headerCells = rows[0].slice(1, -1).split('|').map(c => c.trim());
+        const bodyRows = rows.slice(1).map(r => r.slice(1, -1).split('|').map(c => c.trim()));
+
+        elements.push(
+          <div key={`table-${i}`} className="my-3.5 overflow-x-auto rounded-2xl border border-[#B7A89A]/40 shadow-sm bg-white">
+            <table className="w-full text-left text-xs sm:text-[13px] border-collapse min-w-[320px]">
+              <thead>
+                <tr className="bg-[#722f37] text-[#FAF6EE]">
+                  {headerCells.map((cell, cIdx) => (
+                    <th key={cIdx} className="px-3.5 py-2.5 font-bold tracking-wide border-b border-[#8C3A45] whitespace-nowrap">
+                      {parseInline(cell, false)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#B7A89A]/20">
+                {bodyRows.map((row, rIdx) => (
+                  <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-[#FAF6EE]' : 'bg-[#FAF6EE]/50 hover:bg-[#F3EDE2] transition-colors'}>
+                    {row.map((cell, cIdx) => (
+                      <td key={cIdx} className="px-3.5 py-2.5 text-[#722f37] font-medium align-top leading-relaxed">
+                        {parseInline(cell, false)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         );
-      })}
+      }
+      continue;
+    }
+
+    // 2. Horizontal divider
+    if (trimmed === '---' || trimmed === '***') {
+      elements.push(<hr key={`hr-${i}`} className="my-3 border-t border-[#B7A89A]/40" />);
+      i++;
+      continue;
+    }
+
+    // 3. Blockquote
+    if (trimmed.startsWith('> ')) {
+      elements.push(
+        <div key={`quote-${i}`} className="my-2 p-3 rounded-2xl bg-[#722f37]/10 border-l-4 border-[#722f37] text-xs font-semibold text-[#722f37] italic">
+          {parseInline(trimmed.substring(2), isUser)}
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // 4. Headings
+    if (trimmed.startsWith('## ')) {
+      elements.push(
+        <h2 key={`h2-${i}`} className={`text-base sm:text-lg font-black mt-4 mb-1.5 ${isUser ? 'text-white' : 'text-[#722f37]'}`}>
+          {parseInline(trimmed.replace('## ', ''), isUser)}
+        </h2>
+      );
+      i++;
+      continue;
+    }
+
+    if (trimmed.startsWith('### ')) {
+      elements.push(
+        <h3 key={`h3-${i}`} className={`text-sm sm:text-base font-extrabold mt-3.5 mb-1.5 ${isUser ? 'text-white' : 'text-[#722f37]'}`}>
+          {parseInline(trimmed.replace('### ', ''), isUser)}
+        </h3>
+      );
+      i++;
+      continue;
+    }
+
+    if (trimmed.startsWith('#### ')) {
+      elements.push(
+        <h4 key={`h4-${i}`} className={`text-xs sm:text-sm font-bold mt-2.5 mb-1 ${isUser ? 'text-[#FAF6EE]' : 'text-[#722f37]'}`}>
+          {parseInline(trimmed.replace('#### ', ''), isUser)}
+        </h4>
+      );
+      i++;
+      continue;
+    }
+
+    // 5. Lists (unordered or numbered)
+    if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+      elements.push(
+        <li key={`li-${i}`} className={`ml-4 list-disc my-1 ${isUser ? 'text-[#FAF6EE]/95' : 'text-[#722f37]/90'}`}>
+          {parseInline(trimmed.substring(2), isUser)}
+        </li>
+      );
+      i++;
+      continue;
+    }
+
+    if (/^\d+\.\s/.test(trimmed)) {
+      elements.push(
+        <li key={`oli-${i}`} className={`ml-4 list-decimal my-1 ${isUser ? 'text-[#FAF6EE]/95' : 'text-[#722f37]/90'}`}>
+          {parseInline(trimmed.replace(/^\d+\.\s*/, ''), isUser)}
+        </li>
+      );
+      i++;
+      continue;
+    }
+
+    // 6. Regular paragraphs
+    if (trimmed.length > 0) {
+      elements.push(
+        <p key={`p-${i}`} className={`min-h-[1em] ${isUser ? 'text-[#FAF6EE]' : 'text-[#722f37]'}`}>
+          {parseInline(rawLine, isUser)}
+        </p>
+      );
+    }
+
+    i++;
+  }
+
+  return (
+    <div className={`space-y-1.5 text-sm sm:text-[14px] leading-relaxed ${isUser ? 'text-[#FAF6EE]' : 'text-[#722f37]'}`}>
+      {elements}
     </div>
   );
 }
