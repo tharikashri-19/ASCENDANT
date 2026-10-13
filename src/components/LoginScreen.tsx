@@ -37,10 +37,7 @@ export default function LoginScreen({ onContinueAsGuest, onRegistrationComplete 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
-  const [university, setUniversity] = useState('Sri Eshwar College of Engineering');
-  const [customUni, setCustomUni] = useState('');
-  const [isCustomUniActive, setIsCustomUniActive] = useState(false);
-  const [isUniDropdownOpen, setIsUniDropdownOpen] = useState(false);
+  const [university, setUniversity] = useState('');
   const [gpaScale, setGpaScale] = useState<4 | 10>(10);
   const [currentSemester, setCurrentSemester] = useState(1);
   const [prevSgpas, setPrevSgpas] = useState<{ [key: number]: string }>({});
@@ -49,19 +46,6 @@ export default function LoginScreen({ onContinueAsGuest, onRegistrationComplete 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-  const universities = [
-    'Sri Eshwar College of Engineering',
-    'Stanford University',
-    'MIT',
-    'UC Berkeley',
-    'Carnegie Mellon University',
-    'IIT Bombay',
-    'National University of Singapore',
-    'University of Toronto',
-    'Oxford University',
-    'Custom...'
-  ];
 
   const totalRegisterSteps = currentSemester > 1 ? 4 : 3;
 
@@ -106,7 +90,7 @@ export default function LoginScreen({ onContinueAsGuest, onRegistrationComplete 
     setLoading(true);
 
     try {
-      const finalUni = isCustomUniActive ? (customUni.trim() || 'My University') : university;
+      const finalUni = university.trim() || 'My College';
       const initialSemesters: { number: number, sgpa: number }[] = [];
 
       if (currentSemester > 1) {
@@ -217,7 +201,7 @@ export default function LoginScreen({ onContinueAsGuest, onRegistrationComplete 
     } else {
       updateProfile({
         name: 'Guest Scholar',
-        university: 'Sri Eshwar College of Engineering',
+        university: 'College Workspace',
         currentSemester: 1,
         theme: 'se-light',
         gpaScale: 10
@@ -394,51 +378,17 @@ export default function LoginScreen({ onContinueAsGuest, onRegistrationComplete 
                     exit={{ opacity: 0, x: -15 }}
                     className="space-y-3.5"
                   >
-                    <div className="space-y-1.5 relative">
+                    <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-[#E8DCC6] tracking-wide">
-                        University / College
+                        College / University Name
                       </label>
-                      <div
-                        onClick={() => setIsUniDropdownOpen(!isUniDropdownOpen)}
-                        className="w-full px-5 py-2.5 rounded-full bg-[#3D1318]/90 border border-[#8C3A45]/40 text-xs text-[#FAF6EE] flex items-center justify-between cursor-pointer shadow-inner"
-                      >
-                        <span className="truncate">
-                          {isCustomUniActive ? (customUni || 'Type custom below...') : university}
-                        </span>
-                        <ChevronDown className="w-4 h-4 text-[#E8DCC6]/60 shrink-0" />
-                      </div>
-
-                      {isUniDropdownOpen && (
-                        <div className="absolute left-0 right-0 top-full mt-2 z-30 max-h-48 overflow-y-auto rounded-2xl bg-[#3D1318] border border-[#8C3A45] p-2 space-y-1 shadow-2xl">
-                          {universities.map((uni) => (
-                            <div
-                              key={uni}
-                              onClick={() => {
-                                if (uni === 'Custom...') {
-                                  setIsCustomUniActive(true);
-                                } else {
-                                  setUniversity(uni);
-                                  setIsCustomUniActive(false);
-                                }
-                                setIsUniDropdownOpen(false);
-                              }}
-                              className="p-2 rounded-xl text-xs font-medium hover:bg-[#541B22] cursor-pointer text-[#FAF6EE] transition-colors"
-                            >
-                              {uni}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {isCustomUniActive && (
-                        <input
-                          type="text"
-                          value={customUni}
-                          onChange={(e) => setCustomUni(e.target.value)}
-                          placeholder="Enter your college or institution name"
-                          className="w-full mt-2 px-5 py-2.5 rounded-full bg-[#3D1318]/90 border border-[#8C3A45]/40 text-xs text-[#FAF6EE] placeholder:text-[#B7A89A]/60 focus:outline-none focus:ring-2 focus:ring-[#C2737D] transition-all shadow-inner"
-                        />
-                      )}
+                      <input
+                        type="text"
+                        value={university}
+                        onChange={(e) => setUniversity(e.target.value)}
+                        placeholder="Type your college or university name"
+                        className="w-full px-5 py-2.5 rounded-full bg-[#3D1318]/90 border border-[#8C3A45]/40 text-xs text-[#FAF6EE] placeholder:text-[#B7A89A]/60 focus:outline-none focus:ring-2 focus:ring-[#C2737D] transition-all shadow-inner"
+                      />
                     </div>
 
                     {/* Grading Scale */}

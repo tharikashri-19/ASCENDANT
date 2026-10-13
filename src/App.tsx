@@ -354,7 +354,7 @@ function AppContent() {
               onContinueAsGuest={() => {
                 handleOnboardingComplete({
                   name: 'Student Scholar',
-                  university: 'Sri Eshwar College of Engineering',
+                  university: 'College Workspace',
                   currentSemester: 1,
                   theme: 'se-light',
                   gpaScale: 10

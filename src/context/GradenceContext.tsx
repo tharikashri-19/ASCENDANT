@@ -112,7 +112,7 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Create initial default profile if none exists
         const defaultProf: UserProfile = {
           name: userMeta?.name || 'Student',
-          university: userMeta?.university || 'Sri Eshwar College of Engineering',
+          university: userMeta?.university || 'College Workspace',
           currentSemester: Number(userMeta?.currentSemester) || 1,
           theme: 'se-light',
           gpaScale: Number(userMeta?.gpaScale) === 4 ? 4 : 10,

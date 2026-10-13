@@ -38,27 +38,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [university, setUniversity] = useState('Stanford University');
+  const [university, setUniversity] = useState('');
   const [currentSemester, setCurrentSemester] = useState(1);
   const [gpaScale, setGpaScale] = useState<4 | 10>(10);
   const [prevSgpas, setPrevSgpas] = useState<{ [key: number]: string }>({});
-
-  const [isUniDropdownOpen, setIsUniDropdownOpen] = useState(false);
-  const [customUni, setCustomUni] = useState('');
-  const [isCustomUniActive, setIsCustomUniActive] = useState(false);
-
-  const universities = [
-    'Stanford University',
-    'MIT',
-    'UC Berkeley',
-    'Carnegie Mellon University',
-    'IIT Bombay',
-    'Sri Eshwar College of Engineering',
-    'National University of Singapore',
-    'University of Toronto',
-    'Oxford University',
-    'Custom...'
-  ];
 
   const totalSteps = currentSemester > 1 ? 4 : 3;
 
@@ -114,7 +97,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   const submitOnboarding = async () => {
-    const finalUni = isCustomUniActive ? (customUni.trim() || 'My University') : university;
+    const finalUni = university.trim() || 'My College';
     const initialSemesters: { number: number, sgpa: number }[] = [];
 
     if (currentSemester > 1) {
@@ -423,53 +406,19 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   </div>
 
                   {/* University Selection */}
-                  <div className="space-y-1.5 relative">
+                  <div className="space-y-1.5">
                     <label className="text-xs font-bold text-[#722f37] uppercase tracking-wider block">
-                      University / College
+                      College / University Name
                     </label>
-                    <div
-                      onClick={() => setIsUniDropdownOpen(!isUniDropdownOpen)}
-                      className="clay-inset p-3 px-3.5 flex justify-between items-center cursor-pointer"
-                    >
-                      <span className="text-xs font-semibold text-[#722f37] truncate">
-                        {isCustomUniActive ? (customUni || 'Type custom below...') : university}
-                      </span>
-                      <span className="text-[10px] text-[#B7A89A]">▼</span>
+                    <div className="clay-inset p-3 px-3.5">
+                      <input
+                        type="text"
+                        value={university}
+                        onChange={(e) => setUniversity(e.target.value)}
+                        placeholder="Type your college or university name"
+                        className="w-full bg-transparent text-xs font-semibold text-[#722f37] placeholder:text-[#B7A89A] focus:outline-none"
+                      />
                     </div>
-
-                    {isUniDropdownOpen && (
-                      <div className="clay-card absolute left-0 right-0 top-full mt-2 z-20 max-h-48 overflow-y-auto p-1.5 space-y-1">
-                        {universities.map((uni) => (
-                          <div
-                            key={uni}
-                            onClick={() => {
-                              if (uni === 'Custom...') {
-                                setIsCustomUniActive(true);
-                              } else {
-                                setUniversity(uni);
-                                setIsCustomUniActive(false);
-                              }
-                              setIsUniDropdownOpen(false);
-                            }}
-                            className="p-2 rounded-xl text-xs font-medium hover:bg-[#E8DCC6]/60 cursor-pointer text-[#722f37]"
-                          >
-                            {uni}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {isCustomUniActive && (
-                      <div className="clay-inset p-2.5 px-3.5 mt-2">
-                        <input
-                          type="text"
-                          value={customUni}
-                          onChange={(e) => setCustomUni(e.target.value)}
-                          placeholder="Enter your college / institution name"
-                          className="w-full bg-transparent text-xs font-semibold text-[#722f37] placeholder:text-[#B7A89A] focus:outline-none"
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
               </motion.div>

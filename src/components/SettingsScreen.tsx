@@ -454,7 +454,7 @@ export default function SettingsScreen({
                   type="text"
                   value={university}
                   onChange={(e) => setUniversity(e.target.value)}
-                  placeholder="e.g. Stanford University"
+                  placeholder="Type your college or university name"
                   className="w-full bg-transparent text-sm font-semibold text-[#722f37] focus:outline-none placeholder:text-[#B7A89A]"
                 />
               </div>
