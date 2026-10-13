@@ -412,10 +412,10 @@ End with a score in format: "SCORE: X" (e.g. SCORE: 75).`;
           <Sparkles className="w-4 h-4 text-[#FAF6EE]" />
           <span>GRADENCE • AI STUDY COMPANION</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#722f37] leading-tight">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FAF6EE] leading-tight">
           Your Personal AI Study Helper
         </h1>
-        <p className="text-sm sm:text-base text-[#722f37]/80 mt-2 font-medium max-w-2xl leading-relaxed">
+        <p className="text-sm sm:text-base text-[#E8DCC6]/85 mt-2 font-medium max-w-2xl leading-relaxed">
           Ask questions about your courses, homework concepts, study plans, or placement preparation.
         </p>
       </div>

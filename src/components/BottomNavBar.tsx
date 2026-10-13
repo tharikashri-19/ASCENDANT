@@ -31,11 +31,11 @@ export default function BottomNavBar({ activeTab, onChangeTab }: BottomNavBarPro
               className={`relative flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center gap-0.5 transition-all duration-200 cursor-pointer group active:scale-95 ${
                 isActive
                   ? 'clay-btn-burgundy text-[#FAF6EE] shadow-md'
-                  : 'text-[#7A6B5E] hover:text-[#722f37] hover:bg-[#E8DCC6]/50'
+                  : 'text-[#C5B8AB] hover:text-[#FAF6EE] hover:bg-[#722f37]/40'
               }`}
             >
               <IconComponent className={`w-3.5 h-3.5 stroke-[2.2] transition-transform duration-200 ${isActive ? 'scale-110 text-[#FAF6EE]' : 'group-hover:scale-105'}`} />
-              <span className={`text-[8.5px] font-sans font-extrabold tracking-wide uppercase transition-colors ${isActive ? 'text-[#FAF6EE]' : 'text-[#7A6B5E]'}`}>
+              <span className={`text-[8.5px] font-sans font-extrabold tracking-wide uppercase transition-colors ${isActive ? 'text-[#FAF6EE]' : 'text-[#C5B8AB]'}`}>
                 {tab.label}
               </span>
             </button>

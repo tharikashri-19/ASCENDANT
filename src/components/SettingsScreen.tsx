@@ -19,9 +19,14 @@ import {
   ShieldCheck,
   Palette,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  LogOut,
+  UserX,
+  Cloud,
+  RefreshCw
 } from 'lucide-react';
 import { testGroqConnection, KNOWN_GROQ_MODELS } from '../services/ai';
+import { useGradence } from '../context/GradenceContext';
 
 interface SettingsScreenProps {
   profile: UserProfile;
@@ -29,6 +34,7 @@ interface SettingsScreenProps {
   onResetData: () => void;
   onImportData: (dataString: string) => Promise<boolean>;
   onExportData: () => Promise<string>;
+  onOpenAuthModal?: () => void;
 }
 
 export default function SettingsScreen({
@@ -36,7 +42,8 @@ export default function SettingsScreen({
   onUpdateProfile,
   onResetData,
   onImportData,
-  onExportData
+  onExportData,
+  onOpenAuthModal
 }: SettingsScreenProps) {
   const [name, setName] = useState(profile.name);
   const [university, setUniversity] = useState(profile.university);
@@ -62,6 +69,10 @@ export default function SettingsScreen({
   const [activeInfoPage, setActiveInfoPage] = useState<'about' | 'faq' | 'privacy' | 'terms' | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { user, signOut, deleteAccount, isStorageLoading, refreshData } = useGradence();
 
   const handleTestConnection = async () => {
     if (!groqApiKey.trim()) {
@@ -142,7 +153,7 @@ export default function SettingsScreen({
             await navigator.share({
               files: [file],
               title: 'ASCENDANT Academic Backup',
-              text: 'ASCENDANT offline study profile and grades backup.'
+              text: 'ASCENDANT student profile and grades backup.'
             });
           }
         } catch (shareErr) {
@@ -253,7 +264,7 @@ export default function SettingsScreen({
             <strong>ASCENDANT</strong> is created to take the stress out of college and university life. Instead of guessing your CGPA or worrying about attendance cuts, ASCENDANT calculates everything instantly with clear numbers.
           </p>
           <p className="text-xs text-[#722f37]/80 leading-relaxed">
-            Built using a soft, tactile claymorphic design in warm Mocha Cream, Cosmic Latte, and Deep Burgundy. All your data stays 100% private on your own device—no accounts, no tracking, and no internet required for core calculations.
+            Built using a soft, tactile design with Deep Wine, Warm Cream, and Deep Burgundy. All your records are securely saved with complete student privacy.
           </p>
 
           <div className="pt-4 border-t border-[#B7A89A]/30 space-y-3">
@@ -263,12 +274,12 @@ export default function SettingsScreen({
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-[#B7A89A] font-bold">Design Aesthetic</span>
-              <span className="text-[#722f37] font-bold">Warm Claymorphic Light Theme</span>
+              <span className="text-[#722f37] font-bold">Deep Wine & Warm Cream</span>
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-[#B7A89A] font-bold">Data Privacy</span>
               <span className="text-emerald-700 font-bold flex items-center gap-1">
-                <ShieldCheck className="w-4 h-4" /> 100% Offline & Private
+                <ShieldCheck className="w-4 h-4" /> Secure & Private
               </span>
             </div>
           </div>
@@ -299,7 +310,7 @@ export default function SettingsScreen({
           {[
             {
               q: 'Where is my student information saved?',
-              a: 'Everything is saved locally on your own phone or computer browser. None of your grades, attendance numbers, or notes are uploaded to any external server.'
+              a: 'Your records are securely saved on your device and connected to your account, allowing you to access and sync your academic data across all your devices.'
             },
             {
               q: 'How does the Safe Skip Calculator work?',
@@ -346,8 +357,8 @@ export default function SettingsScreen({
           <h3 className="font-extrabold text-[#722f37] text-base">1. 100% Private & Device-Only</h3>
           <p>ASCENDANT stores all your semesters, subjects, exams, and daily tasks directly inside your device's browser sandbox. No user tracking, behavioral analytics, or third-party cookies are used.</p>
 
-          <h3 className="font-extrabold text-[#722f37] text-base mt-4">2. Zero Account Requirement</h3>
-          <p>You never need to log in, register an email, or submit a password. Your study companion is ready for you offline anytime.</p>
+          <h3 className="font-extrabold text-[#722f37] text-base mt-4">2. Zero Friction Setup</h3>
+          <p>Your study companion is ready for you anytime with fast, instant calculations.</p>
 
           <h3 className="font-extrabold text-[#722f37] text-base mt-4">3. Optional AI Assistant</h3>
           <p>If you choose to enter an optional Groq API key for the AI study tutor, the key is saved only in your device storage and sent only to Groq for answering your questions.</p>
@@ -393,11 +404,11 @@ export default function SettingsScreen({
           <Settings className="w-4 h-4 text-[#FAF6EE]" />
           <span>ASCENDANT • PREFERENCES</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#722f37] leading-tight">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FAF6EE] leading-tight">
           Student Preferences & Settings
         </h1>
-        <p className="text-sm sm:text-base text-[#722f37]/80 mt-2 font-medium max-w-2xl leading-relaxed">
-          Manage your student profile, grading scale, theme, and safe offline backups.
+        <p className="text-sm sm:text-base text-[#E8DCC6]/85 mt-2 font-medium max-w-2xl leading-relaxed">
+          Manage your student profile, grading scale, theme, and data backups.
         </p>
       </div>
 
@@ -413,7 +424,7 @@ export default function SettingsScreen({
                 Your Student Profile
               </h3>
             </div>
-            <span className="text-xs font-bold text-[#B7A89A]">OFFLINE PROFILE</span>
+            <span className="text-xs font-bold text-[#B7A89A]">STUDENT PROFILE</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
@@ -468,9 +479,14 @@ export default function SettingsScreen({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="student-gpa-select" className="text-xs font-bold text-[#722f37] uppercase tracking-wider block">
-                Grading System
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="student-gpa-select" className="text-xs font-bold text-[#722f37] uppercase tracking-wider block">
+                  Grading System & GPA Scale
+                </label>
+                <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full bg-[#722f37] text-[#FAF6EE]">
+                  SCALE {gpaScale === 10 ? '10.0' : '4.0'}
+                </span>
+              </div>
               <div className="clay-inset p-3 px-3.5">
                 <select
                   id="student-gpa-select"
@@ -647,6 +663,47 @@ export default function SettingsScreen({
         {/* Column 2: Data Management, Info & Reset */}
         <div className="space-y-6 sm:space-y-8">
 
+          {/* Account & Sync Status Card */}
+          <div className="clay-card p-6 sm:p-8 space-y-5">
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#B7A89A]/30">
+              <div className="flex items-center gap-2.5">
+                <Cloud className="w-5 h-5 text-[#722f37]" />
+                <h3 className="text-sm sm:text-base font-extrabold text-[#722f37] uppercase tracking-wide">
+                  Account & Sync
+                </h3>
+              </div>
+              <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full ${user ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-[#E8DCC6] text-[#541B22] border border-[#B7A89A]/40'}`}>
+                {user ? 'CONNECTED' : 'STUDENT'}
+              </span>
+            </div>
+
+            <p className="text-sm text-[#722f37]/80 leading-relaxed">
+              {user
+                ? `Connected account: ${user.email || user.id}. All grades, attendance records, and routines update seamlessly.`
+                : 'Connect your account to save and synchronize your study records across all your devices.'}
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => onOpenAuthModal ? onOpenAuthModal() : undefined}
+                className="clay-btn-burgundy p-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 flex-1 cursor-pointer"
+              >
+                <Cloud className="w-4 h-4 text-[#FAF6EE]" />
+                <span>{user ? 'Manage Account' : 'Connect Account'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => refreshData()}
+                disabled={isStorageLoading}
+                className="clay-btn-latte p-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 flex-1 cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 text-[#722f37] ${isStorageLoading ? 'animate-spin' : ''}`} />
+                <span>{isStorageLoading ? 'Syncing...' : 'Sync Now'}</span>
+              </button>
+            </div>
+          </div>
+
           {/* Backup and Restore container */}
           <div className="clay-card p-6 sm:p-8 space-y-5">
             <div className="flex items-center justify-between pb-3.5 border-b border-[#B7A89A]/30">
@@ -768,6 +825,52 @@ export default function SettingsScreen({
             </div>
           </div>
 
+          {/* Cloud Account & Session Management */}
+          <div className="clay-card p-6 sm:p-8 space-y-4 border border-[#B7A89A]/40">
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#B7A89A]/30">
+              <div className="flex items-center gap-2.5">
+                <Cloud className="w-5 h-5 text-[#722f37]" />
+                <h3 className="text-sm sm:text-base font-extrabold text-[#722f37] uppercase tracking-wide">
+                  Account & Sync
+                </h3>
+              </div>
+              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${user ? 'bg-emerald-500/20 text-emerald-700' : 'bg-[#E8DCC6] text-[#541B22]'}`}>
+                {user ? 'CONNECTED' : 'STUDENT'}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#F3EDE2] border border-[#B7A89A]/30 space-y-1">
+              <span className="text-[10px] font-bold text-[#722f37]/70 uppercase tracking-wider block">
+                Signed-in Account
+              </span>
+              <p className="text-sm font-black text-[#722f37] truncate">
+                {user?.email || 'Student Scholar'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  await signOut();
+                }}
+                className="clay-btn-latte w-full py-3 text-xs font-bold flex items-center justify-center gap-2 text-[#722f37] cursor-pointer shadow-sm active:scale-95"
+              >
+                <LogOut className="w-4 h-4 text-[#722f37]" />
+                <span>Log Out of Account</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsDeleteAccountModalOpen(true)}
+                className="w-full py-3 rounded-2xl text-xs font-bold text-red-700 bg-red-100/80 hover:bg-red-200/80 border border-red-300 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95"
+              >
+                <UserX className="w-4 h-4 text-red-700" />
+                <span>Delete Account</span>
+              </button>
+            </div>
+          </div>
+
           {/* Reset Data Danger Zone */}
           <div className="clay-card p-6 sm:p-8 space-y-4 border border-red-200">
             <div className="flex items-center justify-between pb-3 border-b border-red-200">
@@ -837,6 +940,52 @@ export default function SettingsScreen({
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="clay-btn-latte py-2 text-xs font-bold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {isDeleteAccountModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="clay-card !bg-[#FAF6EE] max-w-sm w-full p-6 sm:p-7 space-y-5 shadow-2xl border-2 border-red-300">
+            <div className="space-y-2 text-center">
+              <UserX className="w-12 h-12 text-red-600 mx-auto" />
+              <h3 className="text-lg font-black text-[#722f37]">
+                Delete Account?
+              </h3>
+              <p className="text-xs text-[#722f37]/80 leading-relaxed">
+                This will permanently delete your student profile, grades, attendance logs, and all saved academic records.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <button
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    await deleteAccount();
+                    setIsDeleteAccountModalOpen(false);
+                  } catch (e) {
+                    console.error('Delete account failed', e);
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                className="py-3 rounded-2xl bg-red-700 text-[#FAF6EE] text-xs font-extrabold hover:bg-red-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isDeleting ? 'Deleting...' : 'Yes, Delete My Account'}</span>
+              </button>
+
+              <button
+                disabled={isDeleting}
+                onClick={() => setIsDeleteAccountModalOpen(false)}
+                className="clay-btn-latte py-2.5 text-xs font-bold"
               >
                 Cancel
               </button>

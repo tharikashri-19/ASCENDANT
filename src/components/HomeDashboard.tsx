@@ -25,7 +25,8 @@ import {
   BookOpen,
   Code,
   FileText,
-  Quote as QuoteIcon
+  Quote as QuoteIcon,
+  ChevronDown
 } from 'lucide-react';
 
 interface HomeDashboardProps {
@@ -35,6 +36,7 @@ interface HomeDashboardProps {
   activities: Activity[];
   onNavigateToTool: (tool: ToolType) => void;
   attendanceAvg: number;
+  onOpenSemesterSelect?: () => void;
 }
 
 const QUOTES: Quote[] = [
@@ -51,7 +53,8 @@ export default function HomeDashboard({
   exams, 
   activities, 
   onNavigateToTool,
-  attendanceAvg 
+  attendanceAvg,
+  onOpenSemesterSelect
 }: HomeDashboardProps) {
   const [greeting, setGreeting] = useState('Good Morning');
   const [quote, setQuote] = useState<Quote>(() => QUOTES[0]);
@@ -159,20 +162,23 @@ export default function HomeDashboard({
         <div>
           {/* Status Pills Row */}
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="clay-badge-burgundy px-3 py-0.5 text-[10px] sm:text-[11px] tracking-wide inline-flex items-center gap-1.5 shadow-sm font-bold">
+            <button
+              type="button"
+              onClick={onOpenSemesterSelect}
+              className="clay-badge-burgundy px-3 py-0.5 text-[10px] sm:text-[11px] tracking-wide inline-flex items-center gap-1.5 shadow-sm font-bold cursor-pointer hover:scale-105 active:scale-95 transition-all border border-[#FAF6EE]/20 group"
+              title="Click to switch your active semester"
+            >
               <span className="w-2 h-2 rounded-full bg-[#FAF6EE] animate-pulse" />
-              SEM {profile.currentSemester} • ACTIVE
-            </span>
-            <span className="text-xs text-[#7A6B5E] font-medium hidden sm:inline">
+              <span>SEM {profile.currentSemester} • ACTIVE</span>
+              <ChevronDown className="w-3 h-3 text-[#FAF6EE]/70 group-hover:text-[#FAF6EE] transition-colors" />
+            </button>
+            <span className="text-xs text-[#E8DCC6]/85 font-medium hidden sm:inline">
               • {profile.university || 'College Workspace'}
-            </span>
-            <span className="text-xs text-[#722f37] font-semibold hidden md:inline">
-              • 100% Private & Offline
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#722f37] leading-tight">
-            {greeting}, <span className="underline decoration-[#B7A89A]/50">{profile.name || 'Student'}</span>!
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#FAF6EE] leading-tight">
+            {greeting}, <span className="underline decoration-[#E8DCC6]/60">{profile.name || 'Student'}</span>!
           </h1>
         </div>
 
@@ -560,21 +566,21 @@ export default function HomeDashboard({
 
       </div>
 
-      {/* ── 5. System Status & Offline Privacy Bar ──────────────────────── */}
-      <div className="clay-card py-2.5 px-4 sm:px-5 flex items-center justify-between gap-4 bg-gradient-to-r from-[#FAF6EE] to-[#E8DCC6] rounded-[20px] shadow-[4px_4px_14px_rgba(114,47,55,0.05),-3px_-3px_10px_rgba(255,255,255,0.95)] shrink-0">
+      {/* ── 5. System Status Bar ──────────────────────── */}
+      <div className="clay-card py-2.5 px-4 sm:px-5 flex items-center justify-between gap-4 bg-gradient-to-r from-[#FAF6EE] to-[#E8DCC6] rounded-[20px] shadow-[4px_4px_14px_rgba(0,0,0,0.25)] shrink-0">
         <div className="flex items-center gap-2.5">
           <Sparkles className="w-4 h-4 text-[#722f37] shrink-0" />
-          <span className="text-xs sm:text-sm font-bold text-[#722f37]">
-            ASCENDANT Academic Operating System
+          <span className="text-xs sm:text-sm font-bold text-[#541B22]">
+            ASCENDANT Student Workspace
           </span>
-          <span className="text-xs text-[#8C7D70] font-medium hidden sm:inline">
-            • All academic data cached locally in device memory
+          <span className="text-xs text-[#6E5C4E] font-medium hidden sm:inline">
+            • Real-time grade calculations, attendance tracking, and exam planning
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs font-bold text-[#722f37] bg-[#E8DCC6]/80 px-3 py-1 rounded-full border border-white/80 shrink-0 shadow-inner">
-          <ShieldCheck className="w-4 h-4 text-[#722f37]" />
-          <span>100% Private & Offline</span>
+        <div className="flex items-center gap-1.5 text-xs font-bold text-[#541B22] bg-[#FAF6EE] px-3 py-1 rounded-full border border-[#722f37]/20 shrink-0 shadow-inner">
+          <ShieldCheck className="w-4 h-4 text-emerald-700" />
+          <span>Active & Saved</span>
         </div>
       </div>
 

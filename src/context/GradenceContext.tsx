@@ -1,7 +1,23 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserProfile, Semester, AttendanceSubject, Exam, Activity, CareerRoadmap, TimetableItem, HabitItem, CountdownItem, AcademicEvent } from '../types';
-import { setItem, getItem, clearAll, migrateLocalStorageToPreferences } from '../services/storage';
-import { saveApiKey, getApiKey, removeApiKey } from '../services/secureStorage';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import {
+  fetchUserData,
+  upsertProfile,
+  syncSemesters,
+  syncAttendance,
+  syncExams,
+  syncTimetable,
+  syncCountdowns,
+  syncHabits,
+  logActivityToSupabase,
+  clearActivitiesInSupabase,
+  syncRoadmaps,
+  syncAcademicEvents,
+  saveCodingProfilesToSupabase,
+  saveResumeDraftToSupabase,
+  resetAllUserData
+} from '../services/supabaseService';
 import { scheduleExamNotifications, scheduleClassNotifications, scheduleAcademicNotifications } from '../utils/notifications';
 
 export interface ProfileData {
@@ -32,6 +48,8 @@ interface GradenceContextType {
   academicEvents: AcademicEvent[];
   isInitialized: boolean;
   isStorageLoading: boolean;
+  user: any | null;
+  isSupabaseConfigured: boolean;
 
   updateProfile: (profile: UserProfile) => Promise<void>;
   saveSemester: (semester: Semester) => Promise<void>;
@@ -51,6 +69,9 @@ interface GradenceContextType {
   exportData: () => Promise<string>;
   saveResumeDraft: (draft: any) => Promise<void>;
   resumeDraft: any | null;
+  signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  refreshData: () => Promise<void>;
 }
 
 const GradenceContext = createContext<GradenceContextType | undefined>(undefined);
@@ -68,63 +89,146 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [codingProfiles, setCodingProfiles] = useState<CodingProfilesState | null>(null);
   const [resumeDraft, setResumeDraft] = useState<any | null>(null);
   const [academicEvents, setAcademicEvents] = useState<AcademicEvent[]>([]);
-  
+
+  const [user, setUser] = useState<any | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isStorageLoading, setIsStorageLoading] = useState(true);
 
-  // Load from offline preferences storage
+  // Load user data from Supabase
+  const loadUserData = async (activeUserId: string, userMeta?: any) => {
+    try {
+      if (!activeUserId) {
+        setIsStorageLoading(false);
+        setIsInitialized(false);
+        return;
+      }
+
+      const data = await fetchUserData(activeUserId);
+
+      if (data.profile) {
+        setProfile(data.profile);
+        setIsInitialized(true);
+      } else {
+        // Create initial default profile if none exists
+        const defaultProf: UserProfile = {
+          name: userMeta?.name || 'Student',
+          university: userMeta?.university || 'Sri Eshwar College of Engineering',
+          currentSemester: Number(userMeta?.currentSemester) || 1,
+          theme: 'se-light',
+          gpaScale: Number(userMeta?.gpaScale) === 4 ? 4 : 10,
+          groqApiKey: ''
+        };
+        setProfile(defaultProf);
+        // Non-blocking upsert
+        upsertProfile(activeUserId, defaultProf).catch(e => console.warn('Profile sync:', e));
+        setIsInitialized(true);
+      }
+
+      setSemesters(data.semesters);
+      setAttendanceSubjects(data.attendanceSubjects);
+      setExams(data.exams);
+      setActivities(data.activities);
+      setRoadmaps(data.roadmaps);
+      setTimetable(data.timetable);
+      setCountdowns(data.countdowns);
+      setHabits(data.habits);
+      setCodingProfiles(data.codingProfiles);
+      setResumeDraft(data.resumeDraft);
+      setAcademicEvents(data.academicEvents);
+    } catch (e) {
+      console.error('Failed to load user data from Supabase', e);
+    } finally {
+      setIsStorageLoading(false);
+    }
+  };
+
+  // Listen to Supabase Auth State changes with 2.5s safety timeout
   useEffect(() => {
-    async function loadData() {
-      try {
-        await migrateLocalStorageToPreferences();
+    let mounted = true;
 
-        const storedProfile = await getItem('gradence_profile');
-        const storedSemesters = await getItem('gradence_semesters');
-        const storedAttendance = await getItem('gradence_attendance_subjects');
-        const storedExams = await getItem('gradence_exams');
-        const storedActivities = await getItem('gradence_activities');
-        const storedRoadmaps = await getItem('gradence_followed_roadmaps');
-        const storedTimetable = await getItem('gradence_timetable');
-        const storedCountdowns = await getItem('gradence_countdowns');
-        const storedHabits = await getItem('gradence_habits');
-        const storedCoding = await getItem('gradence_coding_profiles');
-        const storedResumeDraft = await getItem('gradence_resume_draft');
-        const storedAcademicEvents = await getItem('gradence_academic_events');
-        const securedApiKey = await getApiKey();
-
-        if (storedProfile) {
-          let profileObj = JSON.parse(storedProfile);
-          if (profileObj.groqApiKey && !securedApiKey) {
-            await saveApiKey(profileObj.groqApiKey);
-          }
-          profileObj.groqApiKey = securedApiKey || profileObj.groqApiKey || '';
-          
-          const { groqApiKey: _, ...cleanProfile } = profileObj;
-          await setItem('gradence_profile', JSON.stringify(cleanProfile));
-
-          setProfile(profileObj);
-          setIsInitialized(true);
-        }
-
-        if (storedSemesters) setSemesters(JSON.parse(storedSemesters));
-        if (storedAttendance) setAttendanceSubjects(JSON.parse(storedAttendance));
-        if (storedExams) setExams(JSON.parse(storedExams));
-        if (storedActivities) setActivities(JSON.parse(storedActivities));
-        if (storedRoadmaps) setRoadmaps(JSON.parse(storedRoadmaps));
-        if (storedTimetable) setTimetable(JSON.parse(storedTimetable));
-        if (storedCountdowns) setCountdowns(JSON.parse(storedCountdowns));
-        if (storedHabits) setHabits(JSON.parse(storedHabits));
-        if (storedCoding) setCodingProfiles(JSON.parse(storedCoding));
-        if (storedResumeDraft) setResumeDraft(JSON.parse(storedResumeDraft));
-        if (storedAcademicEvents) setAcademicEvents(JSON.parse(storedAcademicEvents));
-      } catch (e) {
-        console.error('Failed to load storage values in GradenceContext', e);
-      } finally {
+    // Safety timeout: prevents app from hanging on "Opening ASCENDANT..."
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
         setIsStorageLoading(false);
       }
+    }, 2500);
+
+    if (!isSupabaseConfigured) {
+      setIsStorageLoading(false);
+      return () => clearTimeout(safetyTimer);
     }
-    loadData();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+      if (session?.user) {
+        setUser(session.user);
+        await loadUserData(session.user.id, session.user.user_metadata);
+      } else {
+        setUser(null);
+        setProfile(null);
+        setSemesters([]);
+        setAttendanceSubjects([]);
+        setExams([]);
+        setActivities([]);
+        setRoadmaps([]);
+        setTimetable([]);
+        setCountdowns([]);
+        setHabits([]);
+        setCodingProfiles(null);
+        setResumeDraft(null);
+        setAcademicEvents([]);
+        setIsInitialized(false);
+        setIsStorageLoading(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
+
+  const refreshData = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        await loadUserData(session.user.id, session.user.user_metadata);
+      } else {
+        setIsStorageLoading(false);
+      }
+    } catch {
+      setIsStorageLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
+    setUser(null);
+    setProfile(null);
+    setSemesters([]);
+    setAttendanceSubjects([]);
+    setExams([]);
+    setActivities([]);
+    setRoadmaps([]);
+    setTimetable([]);
+    setCountdowns([]);
+    setHabits([]);
+    setCodingProfiles(null);
+    setResumeDraft(null);
+    setAcademicEvents([]);
+    setIsInitialized(false);
+  };
+
+  const deleteAccount = async () => {
+    if (user?.id) {
+      await resetAllUserData(user.id);
+    }
+    await signOut();
+  };
 
   const logActivity = async (type: Activity['type'], title: string, detail: string) => {
     const newActivity: Activity = {
@@ -134,30 +238,34 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       detail,
       timestamp: new Date().toISOString()
     };
-    const updated = [newActivity, ...activities].slice(0, 20);
+    const updated = [newActivity, ...activities].slice(0, 30);
     setActivities(updated);
-    await setItem('gradence_activities', JSON.stringify(updated));
+
+    if (user?.id) {
+      await logActivityToSupabase(user.id, newActivity);
+    }
   };
 
   const clearActivities = async () => {
     setActivities([]);
-    await setItem('gradence_activities', JSON.stringify([]));
+    if (user?.id) {
+      await clearActivitiesInSupabase(user.id);
+    }
   };
 
   const updateProfile = async (newProfile: UserProfile) => {
-    if (newProfile.groqApiKey !== undefined) {
-      await saveApiKey(newProfile.groqApiKey);
-    }
-    const { groqApiKey, ...cleanProfile } = newProfile;
-    await setItem('gradence_profile', JSON.stringify(cleanProfile));
     setProfile(newProfile);
     setIsInitialized(true);
+
+    if (user?.id) {
+      await upsertProfile(user.id, newProfile);
+    }
     await logActivity('profile', 'Settings Changed', 'System and academic parameters updated.');
   };
 
   const saveSemesters = async (newSemesters: Semester[]) => {
     if (newSemesters.length === 0) return;
-    
+
     let updated = [...semesters];
     newSemesters.forEach(semester => {
       const existsIdx = updated.findIndex(s => s.number === semester.number);
@@ -169,7 +277,10 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
     updated.sort((a, b) => a.number - b.number);
     setSemesters(updated);
-    await setItem('gradence_semesters', JSON.stringify(updated));
+
+    if (user?.id) {
+      await syncSemesters(user.id, updated);
+    }
 
     for (const semester of newSemesters) {
       await logActivity('cgpa', `Semester ${semester.number} Saved`, `Archived ${semester.subjects.length} courses with an SGPA of ${semester.sgpa.toFixed(2)}.`);
@@ -180,8 +291,9 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (maxSemNum >= profile.currentSemester && maxSemNum < 8) {
         const updatedProfile = { ...profile, currentSemester: maxSemNum + 1 };
         setProfile(updatedProfile);
-        const { groqApiKey: _, ...cleanProf } = updatedProfile;
-        await setItem('gradence_profile', JSON.stringify(cleanProf));
+        if (user?.id) {
+          await upsertProfile(user.id, updatedProfile);
+        }
       }
     }
   };
@@ -192,26 +304,32 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const saveAttendance = async (subjects: AttendanceSubject[]) => {
     setAttendanceSubjects(subjects);
-    await setItem('gradence_attendance_subjects', JSON.stringify(subjects));
+    if (user?.id) {
+      await syncAttendance(user.id, subjects);
+    }
   };
 
   const saveExams = async (newExams: Exam[]) => {
     setExams(newExams);
-    await setItem('gradence_exams', JSON.stringify(newExams));
+    if (user?.id) {
+      await syncExams(user.id, newExams);
+    }
+
     if (newExams.length > exams.length) {
       const added = newExams[newExams.length - 1];
       await logActivity('exam', 'Exam Scheduled', `Assessment for "${added.subject}" set for ${added.date}.`);
     } else if (newExams.length < exams.length) {
       await logActivity('exam', 'Assessment Cleared', 'Upcoming assessment log updated.');
     }
-    
-    // Schedule push notifications
+
     scheduleExamNotifications(newExams);
   };
 
   const saveTimetable = async (list: TimetableItem[]) => {
     setTimetable(list);
-    await setItem('gradence_timetable', JSON.stringify(list));
+    if (user?.id) {
+      await syncTimetable(user.id, list);
+    }
 
     if (list.length > timetable.length) {
       const added = list[list.length - 1];
@@ -219,14 +337,15 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } else if (list.length < timetable.length) {
       await logActivity('planner', 'Class Removed 🗑️', 'Class schedule was updated.');
     }
-    
-    // Schedule push notifications
+
     scheduleClassNotifications(list);
   };
 
   const saveCountdowns = async (list: CountdownItem[]) => {
     setCountdowns(list);
-    await setItem('gradence_countdowns', JSON.stringify(list));
+    if (user?.id) {
+      await syncCountdowns(user.id, list);
+    }
 
     if (list.length > countdowns.length) {
       const added = list[list.length - 1];
@@ -238,34 +357,44 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const saveHabits = async (list: HabitItem[]) => {
     setHabits(list);
-    await setItem('gradence_habits', JSON.stringify(list));
+    if (user?.id) {
+      await syncHabits(user.id, list);
+    }
   };
 
   const saveAcademicEvents = async (events: AcademicEvent[]) => {
     setAcademicEvents(events);
-    await setItem('gradence_academic_events', JSON.stringify(events));
-    
-    // Schedule push notifications for the events
+    if (user?.id) {
+      await syncAcademicEvents(user.id, events);
+    }
     scheduleAcademicNotifications(events);
   };
 
   const saveCodingProfiles = async (data: CodingProfilesState) => {
     setCodingProfiles(data);
-    await setItem('gradence_coding_profiles', JSON.stringify(data));
+    if (user?.id) {
+      await saveCodingProfilesToSupabase(user.id, data);
+    }
   };
 
   const saveResumeDraft = async (draft: any) => {
     setResumeDraft(draft);
-    if (draft === null) {
-      await setItem('gradence_resume_draft', '');
-    } else {
-      await setItem('gradence_resume_draft', JSON.stringify(draft));
+    if (user?.id) {
+      await saveResumeDraftToSupabase(user.id, draft);
+    }
+  };
+
+  const saveRoadmaps = async (updated: CareerRoadmap[]) => {
+    setRoadmaps(updated);
+    if (user?.id) {
+      await syncRoadmaps(user.id, updated);
     }
   };
 
   const resetData = async () => {
-    await clearAll();
-    await removeApiKey();
+    if (user?.id) {
+      await resetAllUserData(user.id);
+    }
     setProfile(null);
     setSemesters([]);
     setAttendanceSubjects([]);
@@ -300,16 +429,12 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const importData = async (dataString: string): Promise<boolean> => {
     try {
-      if (!dataString || !dataString.trim()) {
-        return false;
-      }
-      
+      if (!dataString || !dataString.trim()) return false;
       const parsed = JSON.parse(dataString);
       if (!parsed.profile || typeof parsed.profile !== 'object' || typeof parsed.profile.name !== 'string') {
         return false;
       }
 
-      // Sanitize profile to avoid runtime UI crashes
       const rawProfile = parsed.profile;
       const sanitizedProfile: UserProfile = {
         name: typeof rawProfile.name === 'string' ? rawProfile.name : 'Student',
@@ -320,69 +445,40 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         groqApiKey: typeof rawProfile.groqApiKey === 'string' ? rawProfile.groqApiKey : ''
       };
 
-      const { groqApiKey, ...cleanProfile } = sanitizedProfile;
-      if (groqApiKey) {
-        await saveApiKey(groqApiKey);
-      } else {
-        await removeApiKey();
-      }
-      await setItem('gradence_profile', JSON.stringify(cleanProfile));
       setProfile(sanitizedProfile);
-
-      // Validate & restore semesters
       const sems = Array.isArray(parsed.semesters) ? parsed.semesters : [];
-      await setItem('gradence_semesters', JSON.stringify(sems));
       setSemesters(sems);
-
-      // Validate & restore attendance
-      const att = Array.isArray(parsed.attendanceSubjects) ? parsed.attendanceSubjects : 
-                  (Array.isArray(parsed.attendance) ? parsed.attendance : []);
-      await setItem('gradence_attendance_subjects', JSON.stringify(att));
+      const att = Array.isArray(parsed.attendanceSubjects) ? parsed.attendanceSubjects : (Array.isArray(parsed.attendance) ? parsed.attendance : []);
       setAttendanceSubjects(att);
-
-      // Validate & restore exams
       const ex = Array.isArray(parsed.exams) ? parsed.exams : [];
-      await setItem('gradence_exams', JSON.stringify(ex));
       setExams(ex);
-
-      // Validate & restore activities
       const act = Array.isArray(parsed.activities) ? parsed.activities : [];
-      await setItem('gradence_activities', JSON.stringify(act));
       setActivities(act);
-
-      // Validate & restore roadmaps
       const road = Array.isArray(parsed.roadmaps) ? parsed.roadmaps : [];
-      await setItem('gradence_followed_roadmaps', JSON.stringify(road));
       setRoadmaps(road);
-
-      // Validate & restore timetable
       const time = Array.isArray(parsed.timetable) ? parsed.timetable : [];
-      await setItem('gradence_timetable', JSON.stringify(time));
       setTimetable(time);
-
-      // Validate & restore countdowns
       const count = Array.isArray(parsed.countdowns) ? parsed.countdowns : [];
-      await setItem('gradence_countdowns', JSON.stringify(count));
       setCountdowns(count);
-
-      // Validate & restore habits
       const habs = Array.isArray(parsed.habits) ? parsed.habits : [];
-      await setItem('gradence_habits', JSON.stringify(habs));
       setHabits(habs);
-
-      // Validate & restore coding profiles
-      if (parsed.coding && typeof parsed.coding === 'object') {
-        await setItem('gradence_coding_profiles', JSON.stringify(parsed.coding));
-        setCodingProfiles(parsed.coding);
-      } else {
-        await setItem('gradence_coding_profiles', JSON.stringify(null));
-        setCodingProfiles(null);
-      }
-
-      // Validate & restore academic events
+      const coding = (parsed.coding && typeof parsed.coding === 'object') ? parsed.coding : null;
+      setCodingProfiles(coding);
       const acaEvents = Array.isArray(parsed.academicEvents) ? parsed.academicEvents : [];
-      await setItem('gradence_academic_events', JSON.stringify(acaEvents));
       setAcademicEvents(acaEvents);
+
+      if (user?.id) {
+        await upsertProfile(user.id, sanitizedProfile);
+        await syncSemesters(user.id, sems);
+        await syncAttendance(user.id, att);
+        await syncExams(user.id, ex);
+        await syncTimetable(user.id, time);
+        await syncCountdowns(user.id, count);
+        await syncHabits(user.id, habs);
+        await syncRoadmaps(user.id, road);
+        await syncAcademicEvents(user.id, acaEvents);
+        if (coding) await saveCodingProfilesToSupabase(user.id, coding);
+      }
 
       setIsInitialized(true);
       return true;
@@ -390,11 +486,6 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('Import failed', e);
       return false;
     }
-  };
-
-  const saveRoadmaps = async (updated: CareerRoadmap[]) => {
-    setRoadmaps(updated);
-    await setItem('gradence_followed_roadmaps', JSON.stringify(updated));
   };
 
   return (
@@ -412,6 +503,8 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         codingProfiles,
         isInitialized,
         isStorageLoading,
+        user,
+        isSupabaseConfigured,
         updateProfile,
         saveSemester,
         saveSemesters,
@@ -430,7 +523,10 @@ export const GradenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         clearActivities,
         resetData,
         importData,
-        exportData
+        exportData,
+        signOut,
+        deleteAccount,
+        refreshData
       }}
     >
       {children}

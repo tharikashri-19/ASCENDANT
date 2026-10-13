@@ -5,13 +5,15 @@ interface AscendantLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showText?: boolean;
   tagline?: string;
+  light?: boolean;
 }
 
 export default function AscendantLogo({
   className = '',
   size = 'md',
   showText = true,
-  tagline = 'Academic Companion'
+  tagline = 'Academic Companion',
+  light = false
 }: AscendantLogoProps) {
   const sizeMap = {
     sm: { box: 'w-8 h-8', text: 'text-sm', badge: 'text-[9px]' },
@@ -62,13 +64,25 @@ export default function AscendantLogo({
       {showText && (
         <div className="flex flex-col justify-center">
           <div className="flex items-center gap-1.5 leading-none">
-            <span className={`font-black tracking-tight text-[#722f37] font-sans ${currentSize.text}`}>
+            <span
+              className={`font-black tracking-tight font-sans ${currentSize.text} ${
+                light ? 'text-[#FAF6EE]' : 'text-[#722f37]'
+              }`}
+            >
               ASCENDANT
             </span>
-            <span className="w-2 h-2 rounded-full bg-[#722f37] opacity-80" />
+            <span
+              className={`w-2 h-2 rounded-full ${
+                light ? 'bg-[#E8DCC6]' : 'bg-[#722f37]'
+              } opacity-85`}
+            />
           </div>
           {tagline && (
-            <span className={`font-sans font-semibold text-[#8C7D70] tracking-wide mt-0.5 ${currentSize.badge}`}>
+            <span
+              className={`font-sans font-semibold tracking-wide mt-0.5 ${currentSize.badge} ${
+                light ? 'text-[#E8DCC6]/80' : 'text-[#8C7D70]'
+              }`}
+            >
               {tagline}
             </span>
           )}

@@ -12,13 +12,16 @@
   --deep-burgundy: #722f37;
   --deep-burgundy-hover: #5a232a;
   --warm-ivory: #FAF6EE;
-  --bg-primary: #F3EBDD;
-  --text-primary: #722f37;
+  --wine-dark: #330f14;
+  --wine-mid: #4a171e;
+  --wine-deep: #25090c;
+  --bg-primary: #330f14;
+  --text-primary: #FAF6EE;
 }
 
 body {
-  background-color: #F3EBDD;
-  color: #722f37;
+  background: linear-gradient(135deg, #330f14 0%, #4a171e 50%, #25090c 100%) fixed;
+  color: #FAF6EE;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -26,7 +29,7 @@ body {
 }
 
 /* =========================================================================
-   CLAYMORPHISM DESIGN SYSTEM (Mocha Cream #E8DCC6, Cosmic Latte #B7A89A, Deep Burgundy #722f37)
+   CLAYMORPHISM DESIGN SYSTEM (Deep Wine Canvas #330f14 + Warm Ivory Cards #FAF6EE)
    ========================================================================= */
 
 /* Pillowy Claymorphic Card Surface */
@@ -35,19 +38,19 @@ body {
   border-radius: 28px;
   border: 1.5px solid rgba(255, 255, 255, 0.85);
   box-shadow: 
-    10px 10px 24px rgba(114, 47, 55, 0.08),
-    -8px -8px 20px rgba(255, 255, 255, 0.95),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.9),
+    10px 10px 28px rgba(0, 0, 0, 0.35),
+    -6px -6px 20px rgba(114, 47, 55, 0.15),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.95),
     inset -2px -2px 5px rgba(183, 168, 154, 0.35);
-  color: #722f37;
+  color: #541B22;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
 
 .clay-card:hover {
   transform: translateY(-2px);
   box-shadow: 
-    14px 14px 28px rgba(114, 47, 55, 0.12),
-    -10px -10px 22px rgba(255, 255, 255, 1),
+    14px 14px 34px rgba(0, 0, 0, 0.45),
+    -8px -8px 22px rgba(114, 47, 55, 0.22),
     inset 2px 2px 4px rgba(255, 255, 255, 0.95),
     inset -2px -2px 5px rgba(183, 168, 154, 0.3);
 }
@@ -162,17 +165,17 @@ body {
   font-weight: 700;
 }
 
-/* Clay Floating Dock / Navigation Capsule */
+/* Clay Floating Dock / Navigation Capsule on Deep Wine Canvas */
 .clay-dock {
-  background: rgba(244, 237, 226, 0.92);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  background: rgba(43, 13, 17, 0.92);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1.5px solid rgba(140, 58, 69, 0.5);
   box-shadow: 
-    0 14px 36px rgba(114, 47, 55, 0.12),
-    0 -3px 14px rgba(255, 255, 255, 0.95),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.9),
-    inset -2px -2px 4px rgba(183, 168, 154, 0.25);
+    0 16px 36px rgba(0, 0, 0, 0.5),
+    0 -2px 10px rgba(114, 47, 55, 0.25),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.15),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.35);
   border-radius: 9999px;
 }
 
