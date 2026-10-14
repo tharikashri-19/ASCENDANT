@@ -269,10 +269,6 @@ export default function SettingsScreen({
 
           <div className="pt-4 border-t border-[#B7A89A]/30 space-y-3">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-[#B7A89A] font-bold">Created By</span>
-              <span className="text-[#722f37] font-bold">Done by me</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
               <span className="text-[#B7A89A] font-bold">Design Aesthetic</span>
               <span className="text-[#722f37] font-bold">Deep Wine & Warm Cream</span>
             </div>

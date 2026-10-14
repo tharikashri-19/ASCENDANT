@@ -71,8 +71,6 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-[10px] text-[#E8DCC6]/80 font-bold uppercase tracking-widest font-mono whitespace-nowrap flex items-center gap-2"
       >
         <span>STUDENT ACADEMIC COMPANION</span>
-        <span>•</span>
-        <span>DONE BY ME</span>
       </motion.div>
     </div>
   );

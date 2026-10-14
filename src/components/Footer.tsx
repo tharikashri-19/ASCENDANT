@@ -179,7 +179,7 @@ export default function Footer({ onNavigateTab, onShowToast }: FooterProps) {
 
         <div className="clay-badge text-[11px] px-3.5 py-1 text-[#FAF6EE] flex items-center gap-1.5 font-bold">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>DONE BY ME</span>
+          <span>STUDENT FIRST</span>
         </div>
       </div>
     </footer>
