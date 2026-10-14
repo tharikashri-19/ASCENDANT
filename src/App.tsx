@@ -38,7 +38,6 @@ import AISpace from './components/AISpace';
 import CodingProfiles from './components/CodingProfiles';
 import RoadmapsManager from './components/RoadmapsManager';
 import DailyPlanner from './components/DailyPlanner';
-import EventsScreen from './components/EventsScreen';
 import ResumeBuilder from './components/ResumeBuilder';
 import AcademicCalendarScreen from './components/AcademicCalendarScreen';
 import AscendantLogo from './components/AscendantLogo';
@@ -246,13 +245,6 @@ function AppContent() {
         if (activeTool === 'planner') {
           return (
             <DailyPlanner
-              onBack={() => setActiveTool(null)}
-            />
-          );
-        }
-        if (activeTool === 'events') {
-          return (
-            <EventsScreen
               onBack={() => setActiveTool(null)}
             />
           );

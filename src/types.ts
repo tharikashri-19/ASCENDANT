@@ -78,7 +78,7 @@ export interface AcademicEvent {
 }
 
 export type TabType = 'home' | 'tools' | 'progress' | 'settings' | 'ai';
-export type ToolType = 'cgpa' | 'attendance' | 'gpa' | 'exam' | 'converter' | 'coding' | 'roadmaps' | 'planner' | 'events' | 'resume' | 'academic-calendar';
+export type ToolType = 'cgpa' | 'attendance' | 'gpa' | 'exam' | 'converter' | 'coding' | 'roadmaps' | 'planner' | 'resume' | 'academic-calendar';
 
 export interface TimetableItem {
   id: string;

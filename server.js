@@ -195,24 +195,6 @@ app.post('/api/academic/target-prediction', (req, res) => {
   }
 });
 
-// ── 6. External Hackathons & Contests Service ─────────────────────────────────
-app.get('/api/academic/events', (req, res) => {
-  try {
-    const eventsPath = path.join(__dirname, 'scraper', 'events.json');
-    if (fs.existsSync(eventsPath)) {
-      const data = JSON.parse(fs.readFileSync(eventsPath, 'utf-8'));
-      return res.json({
-        success: true,
-        total: data.length,
-        events: data.slice(0, 50)
-      });
-    }
-    return res.json({ success: true, total: 0, events: [] });
-  } catch (err) {
-    return res.status(500).json({ error: 'Could not load events data' });
-  }
-});
-
 // Serve static frontend build files when in production
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {

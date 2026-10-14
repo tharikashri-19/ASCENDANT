@@ -172,13 +172,6 @@ export default function ToolsScreen({ onSelectTool }: ToolsScreenProps) {
           subtitle: 'Step-by-step roadmaps for Fullstack, AI, DevOps, and specialized engineering roles.',
           icon: Map,
           categoryName: 'Career & Professional Skills'
-        },
-        {
-          id: 'events',
-          title: 'Campus & External Events',
-          subtitle: 'Explore college hackathons, competitions, and verified student opportunities.',
-          icon: Calendar,
-          categoryName: 'Career & Professional Skills'
         }
       ]
     }
@@ -271,10 +264,6 @@ export default function ToolsScreen({ onSelectTool }: ToolsScreenProps) {
       case 'roadmaps': {
         if (!roadmaps || roadmaps.length === 0) return null;
         return `${roadmaps.length} career roadmap${roadmaps.length === 1 ? '' : 's'} tracked`;
-      }
-      case 'events': {
-        if (!activities || activities.length === 0) return null;
-        return `${activities.length} activity milestone${activities.length === 1 ? '' : 's'}`;
       }
       default:
         return null;
